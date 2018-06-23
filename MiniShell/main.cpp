@@ -11,9 +11,9 @@
 using namespace std;
 
 
-void sair(int sig) // função de saída
+void sair() // função de saída
 {
-    (void) signal(SIGINT, SIG_DFL);
+    exit(0);
 }
 
 void data(char *comando);
@@ -24,17 +24,13 @@ int main()
 {
     int status;
     pid_t pid;
-    char cwd[4096];
+    char buffer[4096];
     char entrada[100];
     char comando1[100];
     char comando2[100];
     char comando3[100];
     int comandoBg;
     char *saida = "sair";
-
-
-    (void) signal(SIGINT, sair); // interrupção do Mini-Shell
-
 
 
     do{ // execução Mini-Shell
@@ -49,7 +45,7 @@ int main()
 
         cout<<"\n<MINI-SHELL>";
 
-        scanf(" %[^\n]", entrada); // leitura do vetor entrada após um enter
+        scanf(" %[^\n]", &entrada); // leitura do vetor entrada após um enter
 
         if(entrada[strlen(entrada)-1] == '&'){ // Indentificar entrada '&' no final da linha de comando
             comandoBg = 1;
@@ -102,15 +98,15 @@ int main()
 
                 {
                     if(wait(&status) != pid);
-                    // finaliza o processo
+                    sair();
                 }
 
             }
         }
 
-       listar(comando1, cwd);
-       mudar(comando1, comando2, cwd);
-    }while(strcmp(comando1,saida)); // condição de parada
+       listar(comando1, buffer);
+       mudar(comando1, comando2, buffer);
+    }while(strcmp(comando1,saida) != 0); // condição de parada
     return  0;
 }
 
@@ -129,6 +125,14 @@ void listar(char *comando, char *buffer){
     if(strcmp(comando, "pasta") == 0){
             if(getcwd(buffer,sizeof(buffer)) == NULL){
                 printf("Não foi possivel executar o comando!\n");
+            }else{
+                printf("%s", buffer);
             }
+    }
+}
+
+void data(char *comando){
+    if(strcmp(comando, "data") == 0){
+
     }
 }
