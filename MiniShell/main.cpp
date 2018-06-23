@@ -7,132 +7,108 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <vector>
+#include <string.h>
 
 using namespace std;
 
 
-void sair() // função de saída
-{
-    exit(0);
-}
 
-void data(char *comando);
+
+void data(pid_t pid);
 void mudar(char *comando1, char *comando2, char *buffer);
-void listar(char *comando, char *buffer);
+void listar(string argumentos);
+void ps(pid_t pid);
+void apagar(pid_t pid);
+void pasta(pid_t pid);
+void sair();
+
+const char * ObtenhaParamentrosDeEntrada(vector<char*>entrada){
+    entrada.erase(entrada.begin());
+    string retorno = "";
+    for(char * value:entrada)
+        retorno += string(" ")+string(value);
+    return retorno.c_str();
+}
 
 int main()
 {
-    int status;
     pid_t pid;
-    char buffer[4096];
-    char entrada[100];
-    char comando1[100];
-    char comando2[100];
-    char comando3[100];
-    int comandoBg;
-    char *saida = "sair";
+    char entrada[500];
+    do{
 
-
-    do{ // execução Mini-Shell
-
-        for(int i = 0; i < 100; i++) // inicia os vetores de char com \0, para preenchimento posterior
-        {
-            entrada[i] = '\0';
-            comando1[i] = '\0';
-            comando2[i] = '\0';
-            comando3[i] = '\0';
-        }
-
+        *entrada = 0;
         cout<<"\n<MINI-SHELL>";
-
-        scanf(" %[^\n]", &entrada); // leitura do vetor entrada após um enter
-
-        if(entrada[strlen(entrada)-1] == '&'){ // Indentificar entrada '&' no final da linha de comando
-            comandoBg = 1;
-            entrada[strlen(entrada)-2] = '\0';
-        }
-
-        for(int i = 0; i < strlen(entrada); i++)
-        {
-            if(entrada[i] == ' ')
-            {
-
-                entrada[i] = '\0'; // converte espaços para \0
-                strcpy(comando1,entrada); // copia as informações da entrada para o comando1
-                strcpy(comando2,entrada+i+1); // copia as informações da direita para o comando2
-                printf("%s", comando2);
-                for(int j = 0; j < strlen(comando2); j++){
-                    if(comando2[j] == ' '){
-                        comando2[j] = '\0';
-                        strcpy(comando3, comando2+j+1); // copia as informações da direita para o comando3
-                    }
-                }
-            }
+        scanf(" %[^\n]", entrada); // leitura do vetor entrada após um enter
+        vector<char*>comandos;
+        char* aux = strtok(entrada, " ");
+        while(aux != 0){
+            comandos.push_back(aux);
+            aux = strtok(0, " ");
         }
 
 
-        strcpy(comando1,entrada);
-
-        if (!strcmp (comando1, "exec")){ // compara o comando um com a função exec
-
-            if(strcmp(comando2,saida)) // copia o conteúdo da saída para comando 2
-            {
-
-                pid = fork(); // cria o processo
-
-                if(pid==0)
-                {
-                    if(strlen(comando3) == 0) // compara se o comando 3 possui argumentos
-                    {
-                        execlp(comando2,comando2,(void*)0,(void*)0);
-                        exit(-1);
-                    }
-                    else
-                    {
-                        execlp(comando2,comando2,comando3,(void*)0);
-                        exit(-1);
-                    }
-                }
-
-                else
-
-                {
-                    if(wait(&status) != pid);
-                    sair();
-                }
-
-            }
+        if(strcmp(comandos[0],"sair") == 0){
+            sair();
         }
 
-       listar(comando1, buffer);
-       mudar(comando1, comando2, buffer);
-    }while(strcmp(comando1,saida) != 0); // condição de parada
+        if(strcmp(comandos[0],"hoje") == 0){
+            pid = fork();
+            data(pid);
+        }else
+
+        if(strcmp(comandos[0],"processo") == 0){
+            pid = fork();
+            ps(pid);
+        }else
+
+        if(strcmp(comandos[0],"listar") == 0){
+            listar(ObtenhaParamentrosDeEntrada(comandos));
+        }else
+
+        if(strcmp(comandos[0],"apagar") == 0){
+            pid = fork();
+            apagar(pid);
+        }else
+        if(strcmp(comandos[0],"pasta") == 0){
+            pid = fork();
+            pasta(pid);
+        }else{
+            printf("Comando desconhecido\n");
+        }
+
+    }while(1);
     return  0;
 }
 
-void mudar(char *comando1, char *comando2, char *buffer){
-    if(strcmp(comando1, "mudar") == 0){
-        if(chdir(comando2) < 0){
-            printf("Não foi possivel executar o comando!\n");
-        }else{
-            if (getcwd(buffer, 4096) == NULL)
-                perror("Não foi possivel obter o diretorio");
-        }
-    }
+void listar(string parametros){
+    string comando = "ls";
+    comando += string(" ")+ parametros;
+    system(comando.c_str());
 }
 
-void listar(char *comando, char *buffer){
-    if(strcmp(comando, "pasta") == 0){
-            if(getcwd(buffer,sizeof(buffer)) == NULL){
-                printf("Não foi possivel executar o comando!\n");
-            }else{
-                printf("%s", buffer);
-            }
-    }
+void data(pid_t pid){
+    if(pid == 0)
+    execlp("/bin/date", "date", 0);
+
 }
 
-void data(char *comando){
-    if(strcmp(comando, "data") == 0){
+void ps(pid_t pid){
+    if(pid == 0)
+    execlp("/bin/ps", "ps", 0);
+}
 
-    }
+void apagar(pid_t pid){
+    if(pid == 0)
+    execlp("/usr/bin/clear", "clear", 0);
+}
+
+void pasta(pid_t pid){
+    if(pid == 0)
+    execlp("/bin/pwd", "pwd", 0);
+}
+
+void sair() // função de saída
+{
+    exit(0);
 }
